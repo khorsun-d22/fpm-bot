@@ -3,9 +3,12 @@
     devshell.url = "github:numtide/devshell";
     flake-utils.url = "github:numtide/flake-utils";
     nixpkgs.url = "nixpkgs/nixos-unstable";
+    flake-compat.url = "github:edolstra/flake-compat";
 
     devshell.inputs.nixpkgs.follows = "nixpkgs";
     devshell.inputs.flake-utils.follows = "flake-utils";
+
+    flake-compat.flake = false;
   };
 
   outputs =
@@ -13,7 +16,7 @@
     , nixpkgs
     , flake-utils
     , devshell
-    ,
+    , flake-compat
     }:
     let
       maybeDev = p:
@@ -32,9 +35,9 @@
       name = "fpm-bot";
       preOverlays = [ devshell.overlay ];
       overlay = self: pkgs: {
-        lisp = {
-          lisp = pkgs.chickenPackages.eggDerivation {
-            name = "lisp";
+        fpm-bot = {
+          fpm-bot = pkgs.chickenPackages.eggDerivation {
+            name = "fpm-bot";
             src = ./.;
             buildInputs = [ ];
           };
