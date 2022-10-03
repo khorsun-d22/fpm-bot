@@ -1,0 +1,20 @@
+entrypoint = 'fpm-bot.scm'
+compile = ['chicken-install']
+run = ['fpm-bot']
+
+hidden = ['fpm-bot', '*.build.sh', '*.install.sh', '*.c', '*.o']
+
+[nix]
+channel = 'stable-21_11'
+
+[languages.nix]
+pattern = '**/*.nix'
+
+[languages.nix.languageServer]
+start = 'rnix-lsp'
+
+[languages.scheme]
+pattern = '**/*.scm'
+
+[languages.scheme.languageServer]
+start = 'lsp-server'

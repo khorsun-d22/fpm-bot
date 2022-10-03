@@ -1,0 +1,11 @@
+*.build.sh
+*.c
+*.import.scm
+*.install.sh
+*.link
+*.o
+*.so
+/.direnv
+/.local
+/fpm-bot
+/tags

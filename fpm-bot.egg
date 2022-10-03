@@ -1,0 +1,12 @@
+((author "Me")
+ (synopsis "A telegram bot")
+ (license "MIT")
+ (dependencies srfi-69
+               srfi-133
+               telebot
+               spiffy
+               intarweb
+               uri-common
+               medea
+               sxml-serializer)
+ (components (program fpm-bot)))
