@@ -37,10 +37,15 @@
         (pseudo-random-integer (+ 1 (- end start)))))))
 
 (define (make-conversation token chat_id)
-  (define (send text)
-    (send-message token
-                  chat_id: chat_id
-                  text: text))
+  (define (send text . args)
+    (apply send-message token
+           chat_id: chat_id
+           text: text
+           args))
+  (define (reply text . args)
+    (apply send text
+           reply_to_message_id: (resolve-query '(message message_id) update)
+           args))
   (lambda (update)
     (send-chat-action token
                       chat_id: chat_id
@@ -51,26 +56,23 @@
                     (string-split text)
                     #f)))
       (cond ((equal? text "/start")
-             (send "Hi there!"))
+             (reply "Hi there!"))
             ((equal? text "/chuck")
-             (send (random-list-ref chuck-norris-quotes)))
+             (reply (random-list-ref chuck-norris-quotes)))
             ((equal? text "/cat")
              (send-photo token
                          chat_id: chat_id
                          photo: (cat-image-url)))
             ((equal? (car words) "/rand")
-             (send (sprintf "~s"
-                            (apply random-number
-                                   (filter (lambda (x) (not (equal? #f x)))
-                                           (map string->number
-                                                (cdr words)))))))
+             (reply (sprintf "~s"
+                             (apply random-number
+                                    (filter (lambda (x) (not (equal? #f x)))
+                                            (map string->number
+                                                 (cdr words)))))))
             ((not (null? text))
-             (send (sprintf "You said: ~A" text)))
+             (reply (sprintf "You said: ~A" text)))
             (else
-              (send-message token
-                            chat_id: chat_id
-                            text: "Unsupported message"
-                            reply_to_message_id: message-id))))))
+              (reply "Unsupported message"))))))
 
 (define update-handler
   (let ((token (get-environment-variable "BOT_TOKEN")))
