@@ -9,28 +9,27 @@
         sxml-serializer            ;; XML serializer
         )
 
-(define (make-sender token chat_id)
-  (lambda (text)
-    (send-message token
-                     chat_id: chat_id
-                     text: text)))
-
 (define (make-conversation token chat_id)
   (let ((send (make-sender token chat_id)))
     (lambda (update)
       (send-chat-action token
-                           chat_id: chat_id
-                           action: 'typing)
+                        chat_id: chat_id
+                        action: 'typing)
       (let ((text (resolve-query '(message text) update))
             (message-id (resolve-query '(message message_id) update)))
-        (cond ((not (null? text))
+        (cond ((equal? text "/start")
+               (send-message token
+                             chat_id: chat_id
+                             text: "Hi there!"))
+              ((not (null? text))
                (send-message token
                              chat_id: chat_id
                              text: (sprintf "You said ~A!~%" text)))
-              (else (send-message token
-                                  chat_id: chat_id
-                                  text: "Unsupported message"
-                                  reply_to_message_id: message-id)))))))
+              (else
+                (send-message token
+                              chat_id: chat_id
+                              text: "Unsupported message"
+                              reply_to_message_id: message-id)))))))
 
 (define update-handler
   (let ((token (get-environment-variable "BOT_TOKEN")))
@@ -50,8 +49,8 @@
                 (equal? path '(/ "hook")))
            (let ((update (read-json (request-port (current-request))
                                     consume-trailing-whitespace: #f)))
-             (send-response status: 'ok)
-             (update-handler update)))
+             (update-handler update)
+             (send-response status: 'ok)))
           ((equal? method 'GET)
            (send-sxml-response
              `(html (@@ *DOCTYPE* "html")
@@ -61,7 +60,8 @@
                              (a (@ (href "https://t.me/dnu_fpm_name_provisional_bot"))
                                 "Telegram")
                              "!")))))
-          (else (continue)))))
+          (else
+            (continue)))))
 
 (access-log (current-error-port))
 (vhost-map `((".*" . ,handle-request)))
