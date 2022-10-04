@@ -2,7 +2,7 @@
 
 entrypoint = 'fpm-bot.scm'
 compile = ['chicken-install']
-run = ['fpm-bot']
+run = ['./fpm-bot']
 
 hidden = ['fpm-bot', '*.build.sh', '*.install.sh', '*.c', '*.o']
 
