@@ -1,8 +1,8 @@
 {
   inputs = {
+    nixpkgs.url = "nixpkgs/nixos-21.11";
     devshell.url = "github:numtide/devshell";
     flake-utils.url = "github:numtide/flake-utils";
-    nixpkgs.url = "nixpkgs/nixos-unstable";
     flake-compat.url = "github:edolstra/flake-compat";
 
     devshell.inputs.nixpkgs.follows = "nixpkgs";
@@ -18,18 +18,6 @@
     , devshell
     , flake-compat
     }:
-    let
-      maybeDev = p:
-        if p ? dev
-        then p.dev
-        else p;
-      makeIncludePath = ps:
-        nixpkgs.lib.makeSearchPath "include"
-          (map maybeDev ps);
-      makePkgconfigPath = ps:
-        nixpkgs.lib.makeSearchPath "lib/pkgconfig"
-          (map maybeDev ps);
-    in
     flake-utils.lib.simpleFlake {
       inherit self nixpkgs;
       name = "fpm-bot";
@@ -63,13 +51,13 @@
               name = "fpm-bot";
               src = ./.;
               buildInputs = with self.eggs; [
-                self.fpm-bot.telebot
                 intarweb
                 medea
                 spiffy
                 srfi-133
                 srfi-69
                 sxml-serializer
+                telebot
                 uri-common
               ];
             };
