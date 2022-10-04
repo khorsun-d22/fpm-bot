@@ -60,7 +60,7 @@
             ((equal? (car words) "/rand")
              (send (sprintf "~s"
                             (apply random-number
-                                   (remove (lambda (x) (equal? #f x))
+                                   (filter (lambda (x) (not (equal? #f x)))
                                            (map string->number
                                                 (cdr words)))))))
             ((not (null? text))
