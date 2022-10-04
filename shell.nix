@@ -4,7 +4,7 @@
       url = "https://github.com/numtide/devshell/archive/e3dc3e21594fe07bdb24bdf1c8657acaa4cb8f66.tar.gz";
       sha256 = "sha256:040qai0qkf443w410hx8kgnvay000kanqjglsrcbbixlmrq6a5gv";
     })
-    { }
+    { nixpkgs = pkgs; }
 , ...
 }:
 let
