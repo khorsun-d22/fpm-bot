@@ -7,8 +7,7 @@
     { nixpkgs = pkgs; }
 , ...
 }:
-let
-  fpm-bot = import ./default.nix { inherit pkgs; };
+let fpm-bot = import ./default.nix { inherit pkgs; };
 in
 devshell.mkShell {
   imports = [
