@@ -1,16 +1,15 @@
-{ system ? builtins.currentSystem
-, pkgs ? import <nixpkgs> {
-    inherit system;
-    overlays = [ (import ./overlay.nix) ];
-  }
+{ pkgs ? import <nixpkgs> { }
 , devshell ? import
     (fetchTarball {
       url = "https://github.com/numtide/devshell/archive/e3dc3e21594fe07bdb24bdf1c8657acaa4cb8f66.tar.gz";
       sha256 = "sha256:040qai0qkf443w410hx8kgnvay000kanqjglsrcbbixlmrq6a5gv";
     })
-    { inherit system; }
+    { }
 , ...
 }:
+let
+  fpm-bot = import ./default.nix { inherit pkgs; };
+in
 devshell.mkShell {
   imports = [
     "${devshell.extraModulesDir}/language/c.nix"
@@ -42,7 +41,7 @@ devshell.mkShell {
           pkgs.lib.concatStringsSep ":"
             (map (egg: "${egg}/${chicken-repo-suffix}")
               (builtins.filter pkgs.lib.isDerivation
-                ([ pkgs.chicken ] ++ builtins.attrValues pkgs.fpm-bot.eggs)));
+                ([ pkgs.chicken ] ++ builtins.attrValues fpm-bot.eggs)));
       }
     ];
 }
