@@ -25,27 +25,26 @@ let self = {
         ];
       };
 
-      fpm-bot = pkgs.chickenPackages.eggDerivation {
-        name = "fpm-bot";
-        src = ./.;
-        buildInputs = with self.eggs; [
-          http-client
-          intarweb
-          medea
-          spiffy
-          srfi-133
-          srfi-69
-          sxml-serializer
-          telebot
-          uri-common
-        ];
-      };
-
     };
 
-  fpm-bot = self.eggs.fpm-bot.overrideAttrs (old: {
+  fpm-bot = (pkgs.chickenPackages.eggDerivation {
     name = "fpm-bot";
-  });
+    src = ./.;
+    buildInputs = with self.eggs; [
+      http-client
+      intarweb
+      medea
+      spiffy
+      srfi-133
+      srfi-69
+      sxml-serializer
+      telebot
+      uri-common
+    ];
+  }).overrideAttrs
+    (old: {
+      name = "fpm-bot";
+    });
 
   docker-image = pkgs.dockerTools.buildLayeredImage {
     name = "fpm-bot";
