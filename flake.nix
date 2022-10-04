@@ -77,12 +77,11 @@
             lang = "en_US.UTF-8";
           };
           devshell.packages = [
-            pkgs.chicken
             pkgs.egg2nix
             pkgs.git-subrepo
             pkgs.rnix-lsp
             pkgs.nixpkgs-fmt
-          ];
+          ] ++ pkgs.fpm-bot.fpm-bot.buildInputs;
           language.c = {
             libraries = [ pkgs.openssl ];
             includes = [ pkgs.openssl ];

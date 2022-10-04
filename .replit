@@ -1,3 +1,5 @@
+# vim: ft=toml
+
 entrypoint = 'fpm-bot.scm'
 compile = ['chicken-install']
 run = ['fpm-bot']
