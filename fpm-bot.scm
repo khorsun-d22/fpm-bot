@@ -42,9 +42,9 @@
            chat_id: chat_id
            text: text
            args))
-  (define (reply text . args)
+  (define (reply text to . args)
     (apply send text
-           reply_to_message_id: (resolve-query '(message message_id) update)
+           reply_to_message_id: to
            args))
   (lambda (update)
     (send-chat-action token
@@ -56,9 +56,11 @@
                     (string-split text)
                     #f)))
       (cond ((equal? text "/start")
-             (reply "Hi there!"))
+             (reply "Hi there!"
+                    message-id))
             ((equal? text "/chuck")
-             (reply (random-list-ref chuck-norris-quotes)))
+             (reply (random-list-ref chuck-norris-quotes)
+                    message-id))
             ((equal? text "/cat")
              (send-photo token
                          chat_id: chat_id
@@ -68,11 +70,14 @@
                              (apply random-number
                                     (filter (lambda (x) (not (equal? #f x)))
                                             (map string->number
-                                                 (cdr words)))))))
+                                                 (cdr words)))))
+                    message-id))
             ((not (null? text))
-             (reply (sprintf "You said: ~A" text)))
+             (reply (sprintf "You said: ~A" text)
+                    message-id))
             (else
-              (reply "Unsupported message"))))))
+              (reply "Unsupported message"
+                     message-id))))))
 
 (define update-handler
   (let ((token (get-environment-variable "BOT_TOKEN")))
