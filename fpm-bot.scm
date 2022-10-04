@@ -54,7 +54,7 @@
            (text (resolve-query '(message text) update))
            (words (if (string? text)
                     (string-split text)
-                    #f))
+                    (list #f)))
            (command (car words))
            (command-args (cdr words)))
       (cond ((equal? command "/start")

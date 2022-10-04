@@ -35,11 +35,14 @@
                  poll-updates
                  make-conversation-manager)
 
-        (import scheme (chicken base)
+        (import scheme
+                (chicken base)
                 (chicken condition))
         (import srfi-1
                 srfi-69)
         (import openssl
+                intarweb
+                uri-common
                 http-client)
         (import medea
                 (only srfi-133 vector-for-each))
@@ -49,7 +52,11 @@
         ;;; helper functions
 
         (define (get-query-url token method)
-          (string-append api-base token "/" method))
+          (make-request uri: (uri-reference
+                               (string-append api-base token "/" method))
+                        method: 'POST
+                        headers: (headers
+                                   '((content-type application/json)))))
 
         (define (clean-query-parameters parameters)
           (let ((cleaned-parameters (remove (lambda (p) (equal? #f (cdr p)))
@@ -78,10 +85,11 @@
                  (abort 'required-parameter-missing)
                  (with-input-from-request
                    (get-query-url token method)
-                   (clean-query-parameters
-                     (map (lambda (l) (cons (first l) (second l)))
-                          (zip '(required_params ... optional_params ...)
-                               (list required_params ... optional_params ...))))
+                   (json->string
+                     (remove (lambda (p) (equal? #f (cdr p)))
+                             (map (lambda (l) (cons (first l) (second l)))
+                                  (zip '(required_params ... optional_params ...)
+                                       (list required_params ... optional_params ...)))))
                    read-json))))))
 
         (wrap-api-method "getMe" get-me (required) (optional))
@@ -201,7 +209,8 @@
 
         (wrap-api-method "sendPoll"
                          send-poll
-                         (required question
+                         (required chat_id
+                                   question
                                    options)
                          (optional is_anonymous
                                    type
