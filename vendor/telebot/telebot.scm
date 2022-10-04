@@ -12,6 +12,7 @@
                  send-location
                  send-venue
                  send-contact
+                 send-poll
                  send-chat-action
                  get-user-profile-photos
                  get-file
@@ -199,7 +200,7 @@
                                    reply_markup))
 
         (wrap-api-method "sendPoll"
-                         semd-poll
+                         send-poll
                          (required question
                                    options)
                          (optional is_anonymous
