@@ -53,7 +53,7 @@
     (let* ((message-id (resolve-query '(message message_id) update))
            (text (resolve-query '(message text) update))
            (words (if (string? text)
-                    (car (string-split text))
+                    (string-split text)
                     #f))
            (command (car words))
            (command-args (cdr words)))
