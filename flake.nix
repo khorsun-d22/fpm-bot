@@ -65,6 +65,11 @@
 
         fpm-bot = {
           inherit (self.eggs) telebot fpm-bot;
+
+          eggsToRepo = name: eggs: pkgs.symlinkJoin {
+            inherit name;
+            paths = eggs;
+          };
         };
       };
       shell = { pkgs }:
@@ -77,21 +82,30 @@
             lang = "en_US.UTF-8";
           };
           devshell.packages = [
+            pkgs.chicken
             pkgs.egg2nix
             pkgs.git-subrepo
             pkgs.rnix-lsp
             pkgs.nixpkgs-fmt
-          ] ++ pkgs.fpm-bot.fpm-bot.buildInputs;
+          ];
           language.c = {
             libraries = [ pkgs.openssl ];
             includes = [ pkgs.openssl ];
           };
-          devshell.startup.setup-chicken-path.text = ''
-            export CHICKEN_INSTALL_PREFIX="$HOME/fpm-bot/.local"
-            export CHICKEN_INSTALL_REPOSITORY="''${CHICKEN_INSTALL_PREFIX}/lib/chicken/${toString pkgs.chicken.binaryVersion}"
-            export CHICKEN_REPOSITORY_PATH="''${CHICKEN_INSTALL_REPOSITORY}:${pkgs.chicken}/lib/chicken/${toString pkgs.chicken.binaryVersion}"
-            export PATH="''${CHICKEN_INSTALL_PREFIX}/bin:''${PATH}"
-          '';
+          env =
+            let chicken-repo-suffix = "lib/chicken/${toString pkgs.chicken.binaryVersion}";
+            in
+            [
+              { name = "CHICKEN_INSTALL_PREFIX"; eval = "$PRJ_DATA_DIR/local"; }
+              { name = "CHICKEN_INSTALL_REPOSITORY"; eval = "$CHICKEN_INSTALL_PREFIX/${chicken-repo-suffix}"; }
+              {
+                name = "CHICKEN_REPOSITORY_PATH";
+                value =
+                  pkgs.lib.concatStringsSep ":"
+                    (map (egg: "${egg}/${chicken-repo-suffix}") pkgs.fpm-bot.fpm-bot.propagatedBuildInputs);
+              }
+              { name = "PATH"; prefix = "$PRJ_ROOT/local/bin"; }
+            ];
         };
     };
 }

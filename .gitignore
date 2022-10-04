@@ -5,9 +5,9 @@
 *.link
 *.o
 *.so
+/.data
 /.direnv
 /.egg2nix-cache*
-/.local
 /fpm-bot
 /result*
 /tags
