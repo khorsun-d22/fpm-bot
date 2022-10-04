@@ -6,6 +6,7 @@
 							 intarweb
 							 medea
 							 spiffy
+							 srfi-1
 							 srfi-133
 							 srfi-69
 							 sxml-serializer
