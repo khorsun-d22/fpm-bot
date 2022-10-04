@@ -53,31 +53,37 @@
     (let* ((message-id (resolve-query '(message message_id) update))
            (text (resolve-query '(message text) update))
            (words (if (string? text)
-                    (string-split text)
-                    #f)))
-      (cond ((equal? text "/start")
-             (reply "Hi there!"
+                    (car (string-split text))
+                    #f))
+           (command (car words))
+           (command-args (cdr words)))
+      (cond ((equal? command "/start")
+             (reply "Ой всё…"
                     message-id))
-            ((equal? text "/chuck")
+            ((equal? command "/chuck")
              (reply (random-list-ref chuck-norris-quotes)
                     message-id))
-            ((equal? text "/cat")
+            ((equal? command "/cat")
              (send-photo token
                          chat_id: chat_id
                          photo: (cat-image-url)))
-            ((equal? (car words) "/rand")
+            ((equal? command "/rand")
              (reply (sprintf "~s"
                              (apply random-number
                                     (filter (lambda (x) (not (equal? #f x)))
                                             (map string->number
-                                                 (cdr words)))))
+                                                 command-args))))
                     message-id))
-            ((not (null? text))
-             (reply (sprintf "You said: ~A" text)
-                    message-id))
+            ((equal? command "/go")
+             (let ((title (string-intersperse command-args)))
+               (send-poll token
+                          chat_id: chat_id
+                          question: title
+                          options: #("Да" "Нет")
+                          is_anonymous: #f)))
             (else
-              (reply "Unsupported message"
-                     message-id))))))
+              (print "WARNING: unsupported message:")
+              (pretty-print update))))))
 
 (define update-handler
   (let ((token (get-environment-variable "BOT_TOKEN")))
