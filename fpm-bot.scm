@@ -29,8 +29,11 @@
     (send-chat-action token
                       chat_id: chat_id
                       action: 'typing)
-    (let ((text (resolve-query '(message text) update))
-          (message-id (resolve-query '(message message_id) update)))
+    (let ((message-id (resolve-query '(message message_id) update))
+          (text (resolve-query '(message text) update))
+          (words (if (string? text)
+                   (string-split text)
+                   #f)))
       (cond ((equal? text "/start")
              (send-message token
                            chat_id: chat_id
@@ -43,6 +46,13 @@
              (send-photo token
                          chat_id: chat_id
                          photo: (cat-image-url)))
+            ((equal? (car words) "/rand")
+             (send-message token
+                           chat_id: chat_id
+                           text: (sprintf "~s"
+                                          (apply pseudo-random-integer
+                                                 (map string->number
+                                                      (cdr words))))))
             ((not (null? text))
              (send-message token
                            chat_id: chat_id
@@ -76,7 +86,6 @@
           ((equal? method 'GET)
            (send-sxml-response
              `(html
-                (head)
                 (body
                   (p "Hello, World!")
                   (p "Chat with me on "
