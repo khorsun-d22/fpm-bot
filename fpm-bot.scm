@@ -25,34 +25,33 @@
     (alist-ref 'url (vector-ref result 0))))
 
 (define (make-conversation token chat_id)
-  (let ((send (make-sender token chat_id)))
-    (lambda (update)
-      (send-chat-action token
-                        chat_id: chat_id
-                        action: 'typing)
-      (let ((text (resolve-query '(message text) update))
-            (message-id (resolve-query '(message message_id) update)))
-        (cond ((equal? text "/start")
-               (send-message token
-                             chat_id: chat_id
-                             text: "Hi there!"))
-              ((equal? text "/chuck")
-               (send-message token
-                             chat_id: chat_id
-                             text: (random-list-ref chuck-norris-quotes)))
-              ((equal? text "/cat")
-               (send-photo token
+  (lambda (update)
+    (send-chat-action token
+                      chat_id: chat_id
+                      action: 'typing)
+    (let ((text (resolve-query '(message text) update))
+          (message-id (resolve-query '(message message_id) update)))
+      (cond ((equal? text "/start")
+             (send-message token
                            chat_id: chat_id
-                           photo: (cat-image-url)))
-              ((not (null? text))
-               (send-message token
-                             chat_id: chat_id
-                             text: (sprintf "You said ~A!~%" text)))
-              (else
-                (send-message token
-                              chat_id: chat_id
-                              text: "Unsupported message"
-                              reply_to_message_id: message-id)))))))
+                           text: "Hi there!"))
+            ((equal? text "/chuck")
+             (send-message token
+                           chat_id: chat_id
+                           text: (random-list-ref chuck-norris-quotes)))
+            ((equal? text "/cat")
+             (send-photo token
+                         chat_id: chat_id
+                         photo: (cat-image-url)))
+            ((not (null? text))
+             (send-message token
+                           chat_id: chat_id
+                           text: (sprintf "You said ~A!~%" text)))
+            (else
+              (send-message token
+                            chat_id: chat_id
+                            text: "Unsupported message"
+                            reply_to_message_id: message-id))))))
 
 (define update-handler
   (let ((token (get-environment-variable "BOT_TOKEN")))
