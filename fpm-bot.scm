@@ -60,8 +60,9 @@
             ((equal? (car words) "/rand")
              (send (sprintf "~s"
                             (apply random-number
-                                   (map string->number
-                                        (cdr words))))))
+                                   (remove (lambda (x) (equal? #f x))
+                                           (map string->number
+                                                (cdr words)))))))
             ((not (null? text))
              (send (sprintf "You said: ~A" text)))
             (else
