@@ -25,6 +25,16 @@
   (let ((result (get-json "https://api.thecatapi.com/v1/images/search")))
     (alist-ref 'url (vector-ref result 0))))
 
+(define random-number
+  (case-lambda
+    (()
+     (+ 1 (pseudo-random-integer 100)))
+    ((end)
+     (+ 1 (pseudo-random-integer end)))
+    ((start end)
+     (+ start
+        (pseudo-random-integer (+ 1 (- start end)))))))
+
 (define (make-conversation token chat_id)
   (define (send text)
     (send-message token
@@ -49,7 +59,7 @@
                          photo: (cat-image-url)))
             ((equal? (car words) "/rand")
              (send (sprintf "~s"
-                            (apply pseudo-random-integer
+                            (apply random-number
                                    (map string->number
                                         (cdr words))))))
             ((not (null? text))
