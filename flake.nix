@@ -115,7 +115,6 @@
                   pkgs.lib.concatStringsSep ":"
                     (map (egg: "${egg}/${chicken-repo-suffix}") pkgs.fpm-bot.fpm-bot.propagatedBuildInputs);
               }
-              { name = "PATH"; prefix = "$PRJ_ROOT/local/bin"; }
             ];
         };
     };
