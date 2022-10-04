@@ -53,4 +53,5 @@ let self = {
     config.Cmd = [ "${self.fpm-bot}/bin/fpm-bot" ];
     config.ExposedPorts = { "8080" = { }; };
   };
+
 }; in self
