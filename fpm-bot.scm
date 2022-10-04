@@ -34,7 +34,7 @@
      (+ 1 (pseudo-random-integer end)))
     ((start end)
      (+ start
-        (pseudo-random-integer (+ 1 (- start end)))))))
+        (pseudo-random-integer (+ 1 (- end start)))))))
 
 (define (make-conversation token chat_id)
   (define (send text)
