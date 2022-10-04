@@ -1,0 +1,10 @@
+http-client
+intarweb
+medea
+openssl
+spiffy
+srfi-1
+srfi-133
+srfi-69
+sxml-serializer
+uri-common
