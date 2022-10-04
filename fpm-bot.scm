@@ -3,6 +3,7 @@
         (chicken pretty-print)
         (chicken process-context)
         (chicken random)
+        (chicken string)
         telebot                                ;; telegram bot api
         spiffy http-client intarweb uri-common ;; web server
         medea                                  ;; JSON parser/serializer
@@ -25,38 +26,34 @@
     (alist-ref 'url (vector-ref result 0))))
 
 (define (make-conversation token chat_id)
+  (define (send text)
+    (send-message token
+                  chat_id: chat_id
+                  text: text))
   (lambda (update)
     (send-chat-action token
                       chat_id: chat_id
                       action: 'typing)
-    (let ((message-id (resolve-query '(message message_id) update))
-          (text (resolve-query '(message text) update))
-          (words (if (string? text)
-                   (string-split text)
-                   #f)))
+    (let* ((message-id (resolve-query '(message message_id) update))
+           (text (resolve-query '(message text) update))
+           (words (if (string? text)
+                    (string-split text)
+                    #f)))
       (cond ((equal? text "/start")
-             (send-message token
-                           chat_id: chat_id
-                           text: "Hi there!"))
+             (send "Hi there!"))
             ((equal? text "/chuck")
-             (send-message token
-                           chat_id: chat_id
-                           text: (random-list-ref chuck-norris-quotes)))
+             (send (random-list-ref chuck-norris-quotes)))
             ((equal? text "/cat")
              (send-photo token
                          chat_id: chat_id
                          photo: (cat-image-url)))
             ((equal? (car words) "/rand")
-             (send-message token
-                           chat_id: chat_id
-                           text: (sprintf "~s"
-                                          (apply pseudo-random-integer
-                                                 (map string->number
-                                                      (cdr words))))))
+             (send (sprintf "~s"
+                            (apply pseudo-random-integer
+                                   (map string->number
+                                        (cdr words))))))
             ((not (null? text))
-             (send-message token
-                           chat_id: chat_id
-                           text: (sprintf "You said ~A!~%" text)))
+             (send (sprintf "You said: ~A" text)))
             (else
               (send-message token
                             chat_id: chat_id

@@ -1,10 +1,14 @@
 # vim: ft=toml
 
 entrypoint = 'fpm-bot.scm'
-compile = ['chicken-install']
-run = ['./fpm-bot']
+run = ['csi', '-s', 'fpm-bot.scm']
 
 hidden = ['fpm-bot', '*.build.sh', '*.install.sh', '*.c', '*.o']
+
+[env]
+CHICKEN_INSTALL_PREFIX='/home/runner/fpm-bot/.data/local'
+CHICKEN_INSTALL_REPOSITORY='${CHICKEN_INSTALL_PREFIX}/lib/chicken/11'
+CHICKEN_REPOSITORY_PATH='${CHICKEN_INSTALL_REPOSITORY}:${CHICKEN_REPOSITORY_PATH}'
 
 [nix]
 channel = 'stable-21_11'
