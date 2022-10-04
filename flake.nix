@@ -64,7 +64,18 @@
           };
 
         fpm-bot = {
-          inherit (self.eggs) telebot fpm-bot;
+          inherit (self) eggs;
+
+          fpm-bot = self.eggs.fpm-bot.overrideAttrs (old: {
+            name = "fpm-bot";
+          });
+
+          docker-image = pkgs.dockerTools.buildLayeredImage {
+            name = "fpm-bot";
+            tag = "latest";
+            config.Cmd = [ "${self.fpm-bot.fpm-bot}/bin/fpm-bot" ];
+            config.ExposedPorts = { "8080" = { }; };
+          };
 
           eggsToRepo = name: eggs: pkgs.symlinkJoin {
             inherit name;
