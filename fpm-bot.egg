@@ -1,12 +1,14 @@
+;; vim: ft=scheme
 ((author "Me")
  (synopsis "A telegram bot")
  (license "MIT")
- (dependencies srfi-69
-               srfi-133
-               telebot
-               spiffy
-               intarweb
-               uri-common
-               medea
-               sxml-serializer)
+ (dependencies http-client
+							 intarweb
+							 medea
+							 spiffy
+							 srfi-133
+							 srfi-69
+							 sxml-serializer
+							 telebot
+							 uri-common)
  (components (program fpm-bot)))

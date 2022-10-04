@@ -1,13 +1,28 @@
 (import (chicken format)
+        (chicken io)
         (chicken pretty-print)
         (chicken process-context)
-        telebot                    ;; telegram bot api
-        spiffy intarweb uri-common ;; web server
-        medea                      ;; JSON parser/serializer
-        srfi-69                    ;; hash tables
-        srfi-133                   ;; vectors
-        sxml-serializer            ;; XML serializer
+        (chicken random)
+        telebot                                ;; telegram bot api
+        spiffy http-client intarweb uri-common ;; web server
+        medea                                  ;; JSON parser/serializer
+        srfi-69                                ;; hash tables
+        srfi-133                               ;; vectors
+        sxml-serializer                        ;; XML serializer
         )
+
+(define chuck-norris-quotes
+  (call-with-input-file "quotes.txt" read-lines))
+
+(define (random-list-ref list)
+  (list-ref list (pseudo-random-integer (length list))))
+
+(define (get-json url)
+  (with-input-from-request url #f read-json))
+
+(define (cat-image-url)
+  (let ((result (get-json "https://api.thecatapi.com/v1/images/search")))
+    (alist-ref 'url (vector-ref result 0))))
 
 (define (make-conversation token chat_id)
   (let ((send (make-sender token chat_id)))
@@ -21,6 +36,14 @@
                (send-message token
                              chat_id: chat_id
                              text: "Hi there!"))
+              ((equal? text "/chuck")
+               (send-message token
+                             chat_id: chat_id
+                             text: (random-list-ref chuck-norris-quotes)))
+              ((equal? text "/cat")
+               (send-photo token
+                           chat_id: chat_id
+                           photo: (cat-image-url)))
               ((not (null? text))
                (send-message token
                              chat_id: chat_id
@@ -53,15 +76,18 @@
              (send-response status: 'ok)))
           ((equal? method 'GET)
            (send-sxml-response
-             `(html (@@ *DOCTYPE* "html")
-                    (head)
-                    (body (p "Hello, World!")
-                          (p "Chat with me on "
-                             (a (@ (href "https://t.me/dnu_fpm_name_provisional_bot"))
-                                "Telegram")
-                             "!")))))
+             `(html
+                (head)
+                (body
+                  (p "Hello, World!")
+                  (p "Chat with me on "
+                     (a (@ (href "https://t.me/dnu_fpm_name_provisional_bot"))
+                        "Telegram")
+                     "!")))))
           (else
             (continue)))))
+
+(set-pseudo-random-seed! (random-bytes))
 
 (access-log (current-error-port))
 (vhost-map `((".*" . ,handle-request)))

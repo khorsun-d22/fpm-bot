@@ -23,50 +23,52 @@
       name = "fpm-bot";
       preOverlays = [ devshell.overlay ];
       overlay = self: pkgs: {
-        eggs =
-          let
-            eggs = import ./eggs.nix {
-              inherit (pkgs) pkgs stdenv;
-            };
-          in
-          eggs // {
-            openssl = eggs.openssl.overrideAttrs (old: {
-              buildInputs = (old.buildInputs or [ ]) ++ [ pkgs.openssl ];
-            });
-
-            telebot = pkgs.chickenPackages.eggDerivation {
-              name = "telebot";
-              src = ./vendor/telebot;
-              buildInputs = with self.eggs; [
-                http-client
-                medea
-                openssl
-                srfi-1
-                srfi-133
-                srfi-69
-              ];
-            };
-
-            fpm-bot = pkgs.chickenPackages.eggDerivation {
-              name = "fpm-bot";
-              src = ./.;
-              buildInputs = with self.eggs; [
-                intarweb
-                medea
-                spiffy
-                srfi-133
-                srfi-69
-                sxml-serializer
-                telebot
-                uri-common
-              ];
-            };
-          };
-
         fpm-bot = {
-          inherit (self) eggs;
 
-          fpm-bot = self.eggs.fpm-bot.overrideAttrs (old: {
+          eggs =
+            let
+              eggs = import ./eggs.nix {
+                inherit (pkgs) pkgs stdenv;
+              };
+            in
+            eggs // {
+
+              openssl = eggs.openssl.overrideAttrs (old: {
+                buildInputs = (old.buildInputs or [ ]) ++ [ pkgs.openssl ];
+              });
+
+              telebot = pkgs.chickenPackages.eggDerivation {
+                name = "telebot";
+                src = ./vendor/telebot;
+                buildInputs = with self.fpm-bot.eggs; [
+                  http-client
+                  medea
+                  openssl
+                  srfi-1
+                  srfi-133
+                  srfi-69
+                ];
+              };
+
+              fpm-bot = pkgs.chickenPackages.eggDerivation {
+                name = "fpm-bot";
+                src = ./.;
+                buildInputs = with self.fpm-bot.eggs; [
+                  http-client
+                  intarweb
+                  medea
+                  spiffy
+                  srfi-133
+                  srfi-69
+                  sxml-serializer
+                  telebot
+                  uri-common
+                ];
+              };
+
+            };
+
+          fpm-bot = self.fpm-bot.eggs.fpm-bot.overrideAttrs (old: {
             name = "fpm-bot";
           });
 
@@ -77,10 +79,6 @@
             config.ExposedPorts = { "8080" = { }; };
           };
 
-          eggsToRepo = name: eggs: pkgs.symlinkJoin {
-            inherit name;
-            paths = eggs;
-          };
         };
       };
       shell = { pkgs }:
@@ -113,7 +111,9 @@
                 name = "CHICKEN_REPOSITORY_PATH";
                 value =
                   pkgs.lib.concatStringsSep ":"
-                    (map (egg: "${egg}/${chicken-repo-suffix}") pkgs.fpm-bot.fpm-bot.propagatedBuildInputs);
+                    (map (egg: "${egg}/${chicken-repo-suffix}")
+                      (builtins.filter pkgs.lib.isDerivation
+                        ([ pkgs.chicken ] ++ builtins.attrValues pkgs.fpm-bot.eggs)));
               }
             ];
         };
