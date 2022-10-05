@@ -1,4 +1,6 @@
-(import (chicken format)
+(import (chicken condition)
+        (chicken file)
+        (chicken format)
         (chicken io)
         (chicken pretty-print)
         (chicken process-context)
@@ -13,8 +15,35 @@
         sxml-serializer                        ;; XML serializer
         )
 
-(define chuck-norris-quotes
-  (call-with-input-file "quotes.txt" read-lines))
+(define (aborts? thunk)
+  (call-with-current-continuation
+    (lambda (k)
+      (with-exception-handler (lambda exn
+                                (k #t))
+                              (lambda ()
+                                (thunk)
+                                (k #f))))))
+
+(define bot-token
+  (make-parameter (get-environment-variable "BOT_TOKEN")
+                  (lambda (token)
+                    (if (aborts? (lambda () (get-me token)))
+                      (abort (make-property-condition 'invalid-bot-token
+                                                      'value token))
+                      token))))
+
+(define quotes
+  (make-parameter (get-environment-variable "QUOTES_FILE")
+                  (lambda (value)
+                    (let ((value (if (and (string? value)
+                                          (file-readable? value))
+                                   (with-input-from-file value read-lines)
+                                   value)))
+                      (if (and (list? value)
+                               (every string? value))
+                        value
+                        (abort (make-property-condition 'invalid-quotes
+                                                        'value value)))))))
 
 (define (random-list-ref list)
   (list-ref list (pseudo-random-integer (length list))))
@@ -49,24 +78,28 @@
   (lambda (update)
     (send-chat-action token
                       chat_id: chat_id
-                      action: 'typing)
+                      action: "typing")
     (let* ((message-id (resolve-query '(message message_id) update))
            (text (resolve-query '(message text) update))
            (words (if (string? text)
                     (string-split text)
                     (list #f)))
            (command (car words))
-           (command-args (cdr words)))
+           (command-args (cdr words))
+           (command-argstr (if (string? text)
+                             (substring text (string-length command))
+                             #f)))
       (cond ((equal? command "/start")
              (reply "Ой всё…"
                     message-id))
-            ((equal? command "/chuck")
-             (reply (random-list-ref chuck-norris-quotes)
+            ((equal? command "/quote")
+             (reply (random-list-ref (quotes))
                     message-id))
             ((equal? command "/cat")
              (send-photo token
                          chat_id: chat_id
-                         photo: (cat-image-url)))
+                         photo: (cat-image-url)
+                         reply_to_message_id: message-id))
             ((equal? command "/rand")
              (reply (sprintf "~s"
                              (apply random-number
@@ -75,19 +108,17 @@
                                                  command-args))))
                     message-id))
             ((equal? command "/go")
-             (let ((title (string-intersperse command-args)))
-               (send-poll token
-                          chat_id: chat_id
-                          question: title
-                          options: #("Да" "Нет")
-                          is_anonymous: #f)))
+             (send-poll token
+                        chat_id: chat_id
+                        question: (conc "Го " command-argstr)
+                        options: #("Да" "Нет")
+                        is_anonymous: 'false))
             (else
               (print "WARNING: unsupported message:")
               (pretty-print update))))))
 
 (define update-handler
-  (let ((token (get-environment-variable "BOT_TOKEN")))
-    (make-conversation-manager token make-conversation)))
+  (make-conversation-manager (bot-token) make-conversation))
 
 (define (send-sxml-response sxml)
   (with-headers `((connection close))
@@ -121,4 +152,5 @@
 
 (access-log (current-error-port))
 (vhost-map `((".*" . ,handle-request)))
+(server-port 5000)
 (start-server)

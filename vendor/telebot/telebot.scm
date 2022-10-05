@@ -70,6 +70,16 @@
                 tree
                 query))
 
+        (define (with-true-false-unparsers json-unparsers)
+          (define (make-constant-unparser constant replacement)
+            (cons (lambda (p)
+                    (eq? p constant))
+                  (lambda _
+                    (write-json replacement))))
+          (cons (make-constant-unparser 'true #t)
+                (cons (make-constant-unparser 'false #f)
+                      json-unparsers)))
+
         ;;; plain API wrappers, returning deserialized JSON
 
         (define-syntax wrap-api-method
@@ -85,11 +95,14 @@
                  (abort 'required-parameter-missing)
                  (with-input-from-request
                    (get-query-url token method)
-                   (json->string
-                     (remove (lambda (p) (equal? #f (cdr p)))
-                             (map (lambda (l) (cons (first l) (second l)))
-                                  (zip '(required_params ... optional_params ...)
-                                       (list required_params ... optional_params ...)))))
+                   (parameterize ((json-unparsers
+                                    (with-true-false-unparsers
+                                      (json-unparsers))))
+                     (json->string
+                       (remove (lambda (p) (equal? #f (cdr p)))
+                               (map cons
+                                    '(required_params ... optional_params ...)
+                                    (list required_params ... optional_params ...)))))
                    read-json))))))
 
         (wrap-api-method "getMe" get-me (required) (optional))
