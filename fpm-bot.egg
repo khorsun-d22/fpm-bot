@@ -1,15 +1,18 @@
 ;; vim: ft=scheme
-((author "Me")
+
+((author "Khorsun Dmytro")
  (synopsis "A telegram bot")
  (license "MIT")
  (dependencies http-client
 							 intarweb
 							 medea
+							 openssl
 							 spiffy
 							 srfi-1
 							 srfi-133
 							 srfi-69
 							 sxml-serializer
-							 telebot
 							 uri-common)
- (components (program fpm-bot)))
+ (components (extension telebot)
+						 (program fpm-bot
+											(component-dependencies telebot))))

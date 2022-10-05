@@ -9,33 +9,20 @@ let self = {
       buildInputs = (old.buildInputs or [ ]) ++ [ pkgs.openssl ];
     });
 
-    telebot = pkgs.chickenPackages.eggDerivation {
-      name = "telebot";
-      src = ./vendor/telebot;
-      buildInputs = builtins.attrValues {
-        inherit (self.eggs)
-          http-client
-          medea
-          openssl
-          srfi-1
-          srfi-133
-          srfi-69;
-      };
-    };
-
     fpm-bot = pkgs.chickenPackages.eggDerivation {
       name = "fpm-bot";
-      src = ./.;
+      src = builtins.path { path = ./.; name = "fpm-bot"; };
       buildInputs = builtins.attrValues {
         inherit (self.eggs)
           http-client
           intarweb
           medea
+          openssl
           spiffy
+          srfi-1
           srfi-133
           srfi-69
           sxml-serializer
-          telebot
           uri-common;
       };
     };

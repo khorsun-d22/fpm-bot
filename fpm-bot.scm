@@ -6,14 +6,16 @@
         (chicken process-context)
         (chicken random)
         (chicken string)
-        telebot                                ;; telegram bot api
-        spiffy http-client intarweb uri-common ;; web server
-        medea                                  ;; JSON parser/serializer
-        srfi-1                                 ;; lists
-        srfi-69                                ;; hash tables
-        srfi-133                               ;; vectors
-        sxml-serializer                        ;; XML serializer
-        )
+        http-client
+        intarweb        ;; http library
+        medea           ;; JSON parser/serializer
+        spiffy          ;; web server
+        srfi-1          ;; lists
+        srfi-133        ;; vectors
+        srfi-69         ;; hash tables
+        sxml-serializer
+        telebot         ;; telegram bot api
+        uri-common)
 
 (define (aborts? thunk)
   (call-with-current-continuation
