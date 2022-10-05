@@ -15,14 +15,15 @@ let self = {
       telebot = pkgs.chickenPackages.eggDerivation {
         name = "telebot";
         src = ./vendor/telebot;
-        buildInputs = with self.eggs; [
-          http-client
-          medea
-          openssl
-          srfi-1
-          srfi-133
-          srfi-69
-        ];
+        buildInputs = builtins.attrValues {
+          inherit (self.eggs)
+            http-client
+            medea
+            openssl
+            srfi-1
+            srfi-133
+            srfi-69;
+        };
       };
 
     };
@@ -30,17 +31,18 @@ let self = {
   fpm-bot = (pkgs.chickenPackages.eggDerivation {
     name = "fpm-bot";
     src = ./.;
-    buildInputs = with self.eggs; [
-      http-client
-      intarweb
-      medea
-      spiffy
-      srfi-133
-      srfi-69
-      sxml-serializer
-      telebot
-      uri-common
-    ];
+    buildInputs = builtins.attrValues {
+      inherit (self.eggs)
+        http-client
+        intarweb
+        medea
+        spiffy
+        srfi-133
+        srfi-69
+        sxml-serializer
+        telebot
+        uri-common;
+    };
   }).overrideAttrs
     (old: {
       name = "fpm-bot";
