@@ -5,13 +5,13 @@
         (chicken pretty-print)
         (chicken process-context)
         (chicken random)
-        (chicken string)
         http-client
         intarweb        ;; http library
         medea           ;; JSON parser/serializer
         spiffy          ;; web server
         srfi-1          ;; lists
         srfi-133        ;; vectors
+        srfi-152        ;; strings
         srfi-69         ;; hash tables
         sxml-serializer
         telebot         ;; telegram bot api
@@ -67,60 +67,70 @@
      (+ start
         (pseudo-random-integer (+ 1 (- end start)))))))
 
-(define (make-conversation token chat_id)
-  (define (send text . args)
-    (apply send-message token
-           chat_id: chat_id
-           text: text
-           args))
-  (define (reply text to . args)
-    (apply send text
-           reply_to_message_id: to
-           args))
-  (lambda (update)
-    (send-chat-action token
-                      chat_id: chat_id
-                      action: "typing")
-    (let* ((message-id (resolve-query '(message message_id) update))
-           (text (resolve-query '(message text) update))
-           (words (if (string? text)
-                    (string-split text)
-                    (list #f)))
-           (command (car words))
-           (command-args (cdr words))
-           (command-argstr (if (string? text)
-                             (substring text (string-length command))
-                             #f)))
-      (cond ((equal? command "/start")
-             (reply "Ой всё…"
-                    message-id))
-            ((equal? command "/quote")
-             (reply (random-list-ref (quotes))
-                    message-id))
-            ((equal? command "/cat")
-             (send-photo token
-                         chat_id: chat_id
-                         photo: (cat-image-url)
-                         reply_to_message_id: message-id))
-            ((equal? command "/rand")
-             (reply (sprintf "~s"
-                             (apply random-number
-                                    (filter (lambda (x) (not (equal? #f x)))
-                                            (map string->number
-                                                 command-args))))
-                    message-id))
-            ((equal? command "/go")
-             (send-poll token
-                        chat_id: chat_id
-                        question: (conc "Го " command-argstr)
-                        options: #("Да" "Нет")
-                        is_anonymous: 'false))
-            (else
-              (print "WARNING: unsupported message:")
-              (pretty-print update))))))
+(define (extract-numbers str)
+  (filter number?
+          (map string->number
+               (string-split str " "))))
 
-(define update-handler
-  (make-conversation-manager (bot-token) make-conversation))
+(define (message-chat-id update)
+  (resolve-query '(message chat id) update))
+
+(define (message-id update)
+  (resolve-query '(message message_id) update))
+
+(define (send-reply text update)
+  (send-message (bot-token)
+                chat_id: (message-chat-id update)
+                reply_to_message_id: (message-id update)
+                text: text))
+
+(define (char-index str char-or-charset)
+  (string-index str
+                (lambda (c)
+                  (if (char? char-or-charset)
+                    (char=? c char-or-charset)
+                    (memv c char-or-charset)))))
+
+(define (handle-text-message update)
+  (let* ((text (resolve-query '(message text) update))
+         (command (substring text 0 (char-index text (list #\space #\@))))
+         (command-end (char-index text #\space))
+         (command-args (if command-end
+                         (substring text (add1 command-end))
+                         #f)))
+    (pp (list 'text text command command-args))
+    (cond ((equal? command "/start")
+           (send-reply "Ой всё…" update))
+          ((equal? command "/quote")
+           (send-reply (random-list-ref (quotes))
+                       update))
+          ((equal? command "/cat")
+           (send-photo token
+                       chat_id: (message-chat-id update)
+                       photo: (cat-image-url)
+                       reply_to_message_id: message-id))
+          ((equal? command "/rand")
+           (send-reply
+             (number->string
+               (apply random-number
+                      (extract-numbers command-args)))
+             update))
+          ((equal? command "/go")
+           (send-poll token
+                      chat_id: (message-chat-id update)
+                      question: (conc "Го " command-args)
+                      options: #("Да" "Нет")
+                      is_anonymous: 'false))
+          (else
+            (print "WARNING: unknown message type:")
+            (pretty-print update)))))
+
+(define (handle-update update)
+  (cond ((string? (resolve-query '(message text) update))
+         (handle-text-message update))
+        (else
+          (print "WARNING: unknown update type:")
+          (pretty-print update))))
 
 (define (send-sxml-response sxml)
   (with-headers `((connection close))
@@ -136,7 +146,7 @@
                 (equal? path '(/ "hook")))
            (let ((update (read-json (request-port (current-request))
                                     consume-trailing-whitespace: #f)))
-             (update-handler update)
+             (handle-update update)
              (send-response status: 'ok)))
           ((equal? method 'GET)
            (send-sxml-response

@@ -104,6 +104,20 @@ rec {
     ];
   };
 
+  iset = eggDerivation {
+    name = "iset-2.2";
+
+    src = fetchegg {
+      name = "iset";
+      version = "2.2";
+      sha256 = "0yfkcd07cw6xnnqfbbvjy81x0vc54k40vdjp2m7gwxx64is6m3rz";
+    };
+
+    buildInputs = [
+
+    ];
+  };
+
   lazy-seq = eggDerivation {
     name = "lazy-seq-2";
 
@@ -178,6 +192,34 @@ rec {
       srfi-13
       srfi-18
       address-info
+    ];
+  };
+
+  regex = eggDerivation {
+    name = "regex-2.0";
+
+    src = fetchegg {
+      name = "regex";
+      version = "2.0";
+      sha256 = "0qgqrrdr95yqggw8xyvb693nhizwqvf1fp9cjx9p3z80c4ih8j4j";
+    };
+
+    buildInputs = [
+
+    ];
+  };
+
+  salmonella = eggDerivation {
+    name = "salmonella-3.0.1";
+
+    src = fetchegg {
+      name = "salmonella";
+      version = "3.0.1";
+      sha256 = "15rpzlzk8sj3m9m9bjdn363abzrhg788a1c1n6i7fvi3ari7z0mr";
+    };
+
+    buildInputs = [
+
     ];
   };
 
@@ -287,6 +329,20 @@ rec {
     ];
   };
 
+  srfi-152 = eggDerivation {
+    name = "srfi-152-1.0";
+
+    src = fetchegg {
+      name = "srfi-152";
+      version = "1.0";
+      sha256 = "0bwlh6sx7qq6dcpj8nwki6s5sbiy8i9z9fq99n0mj0cis7ykqmmv";
+    };
+
+    buildInputs = [
+      utf8
+    ];
+  };
+
   srfi-18 = eggDerivation {
     name = "srfi-18-0.1.6";
 
@@ -376,6 +432,22 @@ rec {
       matchable
       srfi-1
       srfi-14
+    ];
+  };
+
+  utf8 = eggDerivation {
+    name = "utf8-3.6.3";
+
+    src = fetchegg {
+      name = "utf8";
+      version = "3.6.3";
+      sha256 = "1g41dlbnfgwkfllci7gfqfckfdz0nm5zbihs6vi3rdsjwg17g7iw";
+    };
+
+    buildInputs = [
+      srfi-69
+      iset
+      regex
     ];
   };
 }

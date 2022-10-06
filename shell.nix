@@ -20,9 +20,8 @@ devshell.mkShell {
   devshell.packages = [
     pkgs.chicken
     pkgs.egg2nix
-    pkgs.git-subrepo
-    pkgs.rnix-lsp
     pkgs.nixpkgs-fmt
+    pkgs.rnix-lsp
   ];
   language.c = {
     libraries = [ pkgs.openssl ];
@@ -40,7 +39,7 @@ devshell.mkShell {
           pkgs.lib.concatStringsSep ":"
             (map (egg: "${egg}/${chicken-repo-suffix}")
               (builtins.filter pkgs.lib.isDerivation
-                ([ pkgs.chicken ] ++ builtins.attrValues fpm-bot.eggs)));
+                ([ pkgs.chicken ] ++ pkgs.lib.remove fpm-bot.eggs.fpm-bot (builtins.attrValues fpm-bot.eggs))));
       }
     ];
 }

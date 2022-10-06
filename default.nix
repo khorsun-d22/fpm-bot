@@ -9,6 +9,10 @@ let self = {
       buildInputs = (old.buildInputs or [ ]) ++ [ pkgs.openssl ];
     });
 
+    srfi-152 = self.raw-eggs.srfi-152.overrideAttrs (old: {
+      buildInputs = (old.buildInputs or [ ]) ++ [ self.raw-eggs.salmonella ];
+    });
+
     fpm-bot = pkgs.chickenPackages.eggDerivation {
       name = "fpm-bot";
       src = builtins.path { path = ./.; name = "fpm-bot"; };
@@ -21,6 +25,7 @@ let self = {
           spiffy
           srfi-1
           srfi-133
+          srfi-152
           srfi-69
           sxml-serializer
           uri-common;
