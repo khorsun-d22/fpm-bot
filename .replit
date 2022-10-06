@@ -1,7 +1,7 @@
 # vim: ft=toml
 
 entrypoint = 'fpm-bot.scm'
-run = ['csi', 'telebot.scm', 'fpm-bot.scm']
+run = ['csi', 'telebot.scm', '-s', 'fpm-bot.scm']
 
 hidden = ['fpm-bot', '*.build.sh', '*.install.sh', '*.c', '*.o']
 
