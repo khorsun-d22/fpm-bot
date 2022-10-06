@@ -18,9 +18,3 @@ pattern = '**/*.nix'
 
 [languages.nix.languageServer]
 start = 'rnix-lsp'
-
-[languages.scheme]
-pattern = '**/*.scm'
-
-[languages.scheme.languageServer]
-start = 'lsp-server'
