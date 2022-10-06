@@ -68,9 +68,11 @@
         (pseudo-random-integer (+ 1 (- end start)))))))
 
 (define (extract-numbers str)
-  (filter number?
-          (map string->number
-               (string-split str " "))))
+  (if str
+    (filter number?
+            (map string->number
+                 (string-split str " ")))
+    '()))
 
 (define (message-chat-id update)
   (resolve-query '(message chat id) update))
@@ -93,22 +95,22 @@
 
 (define (handle-text-message update)
   (let* ((text (resolve-query '(message text) update))
-         (command (substring text 0 (char-index text (list #\space #\@))))
+         (command (substring text 0 (or (char-index text (list #\space #\@))
+                                        (string-length text))))
          (command-end (char-index text #\space))
-         (command-args (if command-end
+         (command-args (if (and command-end (< (add1 command-end) (string-length text)))
                          (substring text (add1 command-end))
                          #f)))
-    (pp (list 'text text command command-args))
     (cond ((equal? command "/start")
            (send-reply "Ой всё…" update))
           ((equal? command "/quote")
            (send-reply (random-list-ref (quotes))
                        update))
           ((equal? command "/cat")
-           (send-photo token
+           (send-photo (bot-token)
                        chat_id: (message-chat-id update)
                        photo: (cat-image-url)
-                       reply_to_message_id: message-id))
+                       reply_to_message_id: (message-id update)))
           ((equal? command "/rand")
            (send-reply
              (number->string
@@ -116,11 +118,14 @@
                       (extract-numbers command-args)))
              update))
           ((equal? command "/go")
-           (send-poll token
-                      chat_id: (message-chat-id update)
-                      question: (conc "Го " command-args)
-                      options: #("Да" "Нет")
-                      is_anonymous: 'false))
+           (if (string? command-args)
+             (send-poll (bot-token)
+                        chat_id: (message-chat-id update)
+                        question: (string-append "Го " command-args)
+                        options: #("Да" "Нет")
+                        is_anonymous: 'false)
+             (send-reply "Го! А куда?"
+                         update)))
           (else
             (print "WARNING: unknown message type:")
             (pretty-print update)))))
