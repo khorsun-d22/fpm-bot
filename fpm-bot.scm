@@ -29,20 +29,22 @@
 (define-parameter bot-name #f)
 (define-parameter quotes-list #f)
 (define-parameter quotes-channel-id #f)
+(define-parameter database-uri #f)
 
 (define pipeline '())
 (define pipeline-tail pipeline)
 
 (define (handle-update update)
-  (define (next pipeline)
+  (define (next pipeline update)
     (if (null? pipeline)
       (begin
         (print "WARNING: unhandled update:")
         (pretty-print update))
       ((car pipeline) update
-                      (lambda ()
-                        (next (cdr pipeline))))))
-  (next pipeline))
+                      (lambda (update)
+                        (next (cdr pipeline)
+                              update)))))
+  (next pipeline update))
 
 (define (add-middleware! middleware)
   (if (null? pipeline)
@@ -59,23 +61,30 @@
   (lambda (update next)
     (let* ((text (resolve-query '(message text) update))
            (tokens (p:parse p:command text))
-           (command-name (car tokens))
-           (command-bot-name (cadr tokens))
-           (command-args (caddr tokens)))
+           (command-name (and tokens (car tokens)))
+           (command-bot-name (and tokens (cadr tokens)))
+           (command-args (and tokens (caddr tokens))))
       (if (and (or (eq? #f command-bot-name)
                    (string=? command-bot-name (bot-name)))
+               (not (eq? #f command-name))
                (string=? command-name command))
         (callback update command-args)
-        (next)))))
+        (next update)))))
+
+(define my-commands '())
 
 (define-syntax define-command
   (syntax-rules ()
-    ((define-command (command update args) body ...)
-     (add-middleware!
-       (make-command-handler
-         command
-         (lambda (update args)
-           body ...))))))
+    ((define-command (command-name update args) command-description body ...)
+     (begin
+       (set! my-commands (cons `((command . ,command-name)
+                                 (description . ,command-description))
+                               my-commands))
+       (add-middleware!
+         (make-command-handler
+           command-name
+           (lambda (update args)
+             body ...)))))))
 
 (define (p:map parser f)
   (p:bind parser
@@ -129,8 +138,21 @@
         p:whitespace
         p:rest))))
 
-(define p:rand-command-args
-  (p:separated-by p:whitespace p:number))
+(define (remember-quote-from-channel! message-id)
+  (pp (list 'remember-quote-from-channel! message-id))
+  (call-with-database
+    (database-uri)
+    (lambda (db)
+      (exec (sql db "INSERT OR IGNORE INTO quotes (chat_id, message_id) VALUES (?, ?)")
+            (quotes-channel-id) message-id)
+      (commit db))))
+
+(define (random-quote-from-channel)
+  (call-with-database
+    (database-uri)
+    (lambda (db)
+      (query fetch-value (sql db "SELECT message_id FROM quotes WHERE chat_id = ? ORDER BY RANDOM() LIMIT 1")
+             (quotes-channel-id)))))
 
 (define (random-list-ref list)
   (list-ref list (pseudo-random-integer (length list))))
@@ -165,6 +187,9 @@
 (define (message-id update)
   (resolve-query '(message message_id) update))
 
+(define (message-text update)
+  (resolve-query '(message text) update))
+
 (define (char-index str char-or-charset)
   (string-index str
                 (lambda (c)
@@ -172,30 +197,53 @@
                     (char=? c char-or-charset)
                     (memv c char-or-charset)))))
 
+(add-middleware!
+  (lambda (update next)
+    (let ((channel-id (resolve-query '(channel_post chat id) update))
+          (message-id (resolve-query '(channel_post message_id) update)))
+      (if (and (number? channel-id)
+               (= channel-id
+                  (quotes-channel-id)))
+        (remember-quote-from-channel! message-id)
+        (next update)))))
+
 (define-command ("start" update args)
+  "Hello, World!"
   (send-message (bot-token)
                 chat_id: (message-chat-id update)
                 text: "Ой всё…"
                 reply_to_message_id: (message-id update)))
 
 (define-command ("quote" update args)
+  "Цитаты на все случаи жизни"
   (send-message (bot-token)
                 chat_id: (message-chat-id update)
                 text: (random-list-ref (quotes-list))))
 
+(define-command ("perl" update args)
+  "Случайный пёрл из этого чата"
+  (forward-message (bot-token)
+                   chat_id: (message-chat-id update)
+                   from_chat_id: (quotes-channel-id)
+                   message_id: (random-quote-from-channel)))
+
 (define-command ("cat" update args)
+  "Котики фхтагн!"
   (send-photo (bot-token)
               chat_id: (message-chat-id update)
               photo: (cat-image-url)))
 
 (define-command ("rand" update args)
-  (let ((args (p:parse p:rand-command-args args)))
+  "You sping me rand rand baby rand rand…"
+  (let ((args (p:parse (p:separated-by p:whitespace p:number)
+                       args)))
     (send-message (bot-token)
                   chat_id: (message-chat-id update)
                   text: (number->string (apply random-number args))
                   reply_to_message_id: (message-id update))))
 
 (define-command ("go" update args)
+  "Голосование да/нет"
   (if (string? args)
     (send-poll (bot-token)
                chat_id: (message-chat-id update)
@@ -236,7 +284,7 @@
             (continue)))))
 
 (define (abort-simple message)
-  (print message)
+  (print "FATAL ERROR: " message)
   (exit 1))
 
 (set-pseudo-random-seed! (random-bytes))
@@ -248,6 +296,9 @@
 (bot-name (resolve-query '(result username)
                          (get-me (bot-token))))
 (print "INFO: my name is " (bot-name))
+
+(set-my-commands (bot-token)
+                 commands: (list->vector my-commands))
 
 (let ((quotes-file (get-environment-variable "QUOTES_FILE")))
   (if (and (string? quotes-file)
@@ -268,6 +319,15 @@
        (quotes-channel-title (resolve-query '(result title)
                                             quotes-channel-info)))
   (print "INFO: listening for quotes in channel " quotes-channel-title))
+
+(database-uri (get-environment-variable "DATABASE_URI"))
+(unless (string? (database-uri))
+  (abort-simple "DATABASE_URI environment variable not set"))
+
+(call-with-database
+  (database-uri)
+  (lambda (db)
+    (exec (sql db "CREATE TABLE IF NOT EXISTS quotes (chat_id INTEGER, message_id INTEGER, UNIQUE (chat_id, message_id))"))))
 
 (let ((port (get-environment-variable "PORT")))
   (if (string? port)

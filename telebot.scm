@@ -41,6 +41,7 @@
                  unban-chat-member
                  get-chat
                  answer-callback-query
+                 set-my-commands
                  edit-message-text
                  edit-message-caption
                  edit-message-reply-markup
@@ -303,6 +304,12 @@
                          (required callback_query_id)
                          (optional text
                                    show_alert))
+
+        (wrap-api-method "setMyCommands"
+                         set-my-commands
+                         (required commands)
+                         (optional scope
+                                   language_code))
 
         (wrap-api-method "editMessageText"
                          edit-message-text
