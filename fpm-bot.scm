@@ -139,7 +139,6 @@
         p:rest))))
 
 (define (remember-quote-from-channel! message-id)
-  (pp (list 'remember-quote-from-channel! message-id))
   (call-with-database
     (database-uri)
     (lambda (db)
