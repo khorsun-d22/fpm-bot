@@ -1,4 +1,4 @@
-Just a bot.
+Just a bot. You can play with it on [Telegram](https://t.me/fam_bot_test_group).
 
 # Installation
 
