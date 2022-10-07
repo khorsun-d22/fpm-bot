@@ -1,4 +1,5 @@
-Just a bot. You can play with it on [Telegram](https://t.me/fam_bot_test_group).
+Just a bot. An example is deployed on [Replit](https://replit.com/@jarkad/fpm-bot?v=1).
+You can play with it on [Telegram](https://t.me/fam_bot_test_group).
 Channel with quotes is [here](https://t.me/fam_bot_test_channel).
 
 # Installation
