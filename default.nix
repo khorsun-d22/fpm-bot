@@ -10,7 +10,7 @@ let self = {
     });
 
     srfi-152 = self.raw-eggs.srfi-152.overrideAttrs (old: {
-      buildInputs = (old.buildInputs or [ ]) ++ [ self.raw-eggs.salmonella ];
+      buildPhase = "true";
     });
 
     fpm-bot = pkgs.chickenPackages.eggDerivation {
