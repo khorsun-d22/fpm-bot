@@ -282,7 +282,7 @@
 (vhost-map `((".*" . ,handle-request)))
 
 (when (get-environment-variable "PRODUCTION")
-  (handle-exception (lambda (exn chain))))
+  (handle-exception (lambda (exn chain) #t)))
 
 (print "INFO: listening on http://0.0.0.0:" (server-port))
 (start-server)
