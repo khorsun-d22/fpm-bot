@@ -1,4 +1,5 @@
 Just a bot. You can play with it on [Telegram](https://t.me/fam_bot_test_group).
+Channel with quotes is [here](https://t.me/fam_bot_test_channel).
 
 # Installation
 
@@ -9,6 +10,14 @@ sudo apt-get install chicken-bin libssl-dev
 git clone https://github.com/khorsun-d22/fpm-bot
 cd fpm-bot
 chicken-install -s
+```
+
+## Nix
+
+```sh
+git clone https://github.com/khorsun-d22/fpm-bot
+cd fpm-bot
+nix develop # or direnv allow
 ```
 
 # Usage

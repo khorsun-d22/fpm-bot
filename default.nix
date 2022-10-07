@@ -23,6 +23,7 @@ let self = {
           medea
           openssl
           spiffy
+          sql-de-lite
           srfi-1
           srfi-133
           srfi-152
