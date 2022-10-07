@@ -4,6 +4,7 @@ medea
 openssl
 salmonella
 spiffy
+sql-de-lite
 srfi-1
 srfi-133
 srfi-152

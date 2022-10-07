@@ -64,6 +64,20 @@ rec {
     ];
   };
 
+  foreigners = eggDerivation {
+    name = "foreigners-1.5";
+
+    src = fetchegg {
+      name = "foreigners";
+      version = "1.5";
+      sha256 = "1mm91y61nlawgb7iqdrkz2fi9sc3fic07f5m1ig541b2hbscfiqy";
+    };
+
+    buildInputs = [
+      matchable
+    ];
+  };
+
   http-client = eggDerivation {
     name = "http-client-1.2.1";
 
@@ -178,6 +192,20 @@ rec {
     ];
   };
 
+  object-evict = eggDerivation {
+    name = "object-evict-0.1.1";
+
+    src = fetchegg {
+      name = "object-evict";
+      version = "0.1.1";
+      sha256 = "01q566vx15b338mvmbd2d5x3g0qlhndgmlknawbk5fxl69ps3gl3";
+    };
+
+    buildInputs = [
+      srfi-69
+    ];
+  };
+
   openssl = eggDerivation {
     name = "openssl-2.2.4";
 
@@ -270,6 +298,24 @@ rec {
       srfi-13
       srfi-14
       srfi-18
+    ];
+  };
+
+  sql-de-lite = eggDerivation {
+    name = "sql-de-lite-0.9.0";
+
+    src = fetchegg {
+      name = "sql-de-lite";
+      version = "0.9.0";
+      sha256 = "057wy8cbxx5yhvzbhgj5rdgmnrhfgn695hh8c08bsaj8sn42f98p";
+    };
+
+    buildInputs = [
+      foreigners
+      object-evict
+      srfi-1
+      srfi-18
+      srfi-69
     ];
   };
 

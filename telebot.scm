@@ -39,6 +39,7 @@
                  get-file
                  kick-chat-member
                  unban-chat-member
+                 get-chat
                  answer-callback-query
                  edit-message-text
                  edit-message-caption
@@ -116,14 +117,15 @@
                  (abort 'required-parameter-missing)
                  (with-input-from-request
                    (get-query-url token method)
-                   (parameterize ((json-unparsers
-                                    (with-true-false-unparsers
-                                      (json-unparsers))))
-                     (json->string
-                       (remove (lambda (p) (equal? #f (cdr p)))
-                               (map cons
-                                    '(required_params ... optional_params ...)
-                                    (list required_params ... optional_params ...)))))
+                   (lambda ()
+                     (parameterize ((json-unparsers
+                                      (with-true-false-unparsers
+                                        (json-unparsers))))
+                       (write-json
+                         (remove (lambda (p) (equal? #f (cdr p)))
+                                 (map cons
+                                      '(required_params ... optional_params ...)
+                                      (list required_params ... optional_params ...))))))
                    read-json))))))
 
         (wrap-api-method "getMe" get-me (required) (optional))
@@ -289,6 +291,11 @@
                          unban-chat-member
                          (required chat_id
                                    user_id)
+                         (optional))
+
+        (wrap-api-method "getChat"
+                         get-chat
+                         (required chat_id)
                          (optional))
 
         (wrap-api-method "answerCallbackQuery"
